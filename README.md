@@ -1,4 +1,4 @@
-# Terminal Chat System 💬
+# anonymChat 💬
 
 A lightweight, multi-user chat system designed to run in terminals. Connect multiple clients to a server and chat in real-time with timestamps and user notifications.
 
