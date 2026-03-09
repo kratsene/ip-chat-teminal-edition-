@@ -12,6 +12,7 @@
 [![Code Quality](https://img.shields.io/badge/Code%20Quality-Professional-blue?style=for-the-badge)](test_chat.py)
 
 ---
+![Uploading Untitled.png…]()
 
 ## 🚀 Advanced Multi-Client Terminal Chat with Tor Encryption
 
