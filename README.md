@@ -3,22 +3,17 @@
 <div align="center">
 
 [![Python Version](https://img.shields.io/badge/Python-3.6%2B-blue?style=for-the-badge&logo=python)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/License-BSD-green?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production%20Ready-success?style=for-the-badge)](https://github.com)
-[![Tests](https://img.shields.io/badge/Tests-31%2F31%20Passing-brightgreen?style=for-the-badge)](test_chat.py)
-
+[![Tests](https://img.shields.io/badge/Tests-25%2F25%20Passing-brightgreen?style=for-the-badge)](test-chat.py)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=for-the-badge)](README.md)
-[![Security](https://img.shields.io/badge/Security-Tor%20Encrypted-red?style=for-the-badge&logo=torproject)](https://www.torproject.org)
-[![Code Quality](https://img.shields.io/badge/Code%20Quality-Professional-blue?style=for-the-badge)](test_chat.py)
+[![Security](https://img.shields.io/badge/Security-Tor%20via%20Orbot-red?style=for-the-badge&logo=torproject)](https://www.torproject.org)
 
----
-![Uploading Untitled.png…]()
+## 🚀 Multi-Client Terminal Chat — Works Over the Internet
 
-## 🚀 Advanced Multi-Client Terminal Chat with Tor Encryption
+A terminal-based chat system that works between **any two devices anywhere in the world**, with optional Tor/Orbot encryption for privacy.
 
-A **production-ready** terminal-based chat system with optional Tor encryption, hidden services support, and comprehensive testing. Built for security, anonymity, and ease of use.
-
-[Features](#-features) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Download](#-what-to-download)
+[Features](#-features) • [Quick Start](#-quick-start) • [Internet Setup](#-connecting-over-the-internet) • [Tor / Orbot](#-tor--orbot-setup) • [Troubleshooting](#-troubleshooting)
 
 </div>
 
@@ -26,690 +21,299 @@ A **production-ready** terminal-based chat system with optional Tor encryption, 
 
 ## ✨ Features
 
-### Core Capabilities
-- ✅ **Multi-client support** - Connect multiple users simultaneously with threading
-- ✅ **Real-time messaging** - Instant message delivery with timestamps
-- ✅ **User notifications** - Join/leave announcements automatically
-- ✅ **Built-in commands** - `/users`, `/help`, `/quit` for user control
-- ✅ **Zero dependencies** - Base system uses only Python stdlib
-
-### Security & Privacy
-- 🔐 **Tor SOCKS proxy** - Route through Tor network for anonymity
-- 🧅 **Tor hidden services** - Run server as .onion hidden service
-- 🔒 **End-to-end encryption** - All traffic encrypted through Tor
-- 👥 **Server anonymity** - Server IP never exposed with hidden services
-- 🛡️ **Censorship resistant** - Perfect for restricted environments
-
-### Testing & Quality
-- 🧪 **31 unit tests** - Comprehensive test coverage
-- ✅ **100% passing tests** - All scenarios validated
-- 📊 **Performance verified** - Speed & reliability tested
-- 🔍 **Edge cases covered** - Special characters, unicode, long messages
-- 📈 **Production ready** - Error handling & fallbacks
-
-### Documentation
-- 📖 **5+ setup guides** - Quick start to advanced configuration
-- 📊 **Visual diagrams** - Architecture and flow charts
-- 🔧 **Installation tools** - Automatic dependency installation
-- 💾 **Multiple formats** - Markdown, text, and interactive
-- 🗺️ **Navigation guide** - Easy file discovery
-
----
-
-## 🎯 Three Security Levels
-
-<table>
-<tr>
-<td align="center">
-<h3>⚡ Level 1: Fast</h3>
-<p><strong>Direct Connection</strong></p>
-<p>Perfect for:<br/>Local networks<br/>Testing<br/>Trusted environments</p>
-<p><code>python3 chat_server.py</code><br/><code>python3 chat_client.py</code></p>
-<p>⏱️ 1 minute<br/>🚀 Fastest</p>
-</td>
-<td align="center">
-<h3>🔐 Level 2: Secure</h3>
-<p><strong>Tor SOCKS Proxy</strong></p>
-<p>Perfect for:<br/>ISP privacy<br/>Anonymity<br/>General use</p>
-<p><code>tor --SocksPort 9050</code><br/><code>python3 chat_client_tor.py</code></p>
-<p>⏱️ 3 minutes<br/>🔐 Recommended</p>
-</td>
-<td align="center">
-<h3>🧅 Level 3: Private</h3>
-<p><strong>Tor Hidden Service</strong></p>
-<p>Perfect for:<br/>Maximum privacy<br/>Censorship<br/>Server anonymity</p>
-<p><code>python3 chat_server_onion.py</code><br/><code>--hidden-service</code></p>
-<p>⏱️ 5 minutes<br/>🧅 Maximum</p>
-</td>
-</tr>
-</table>
+- ✅ **Works over the internet** — Connect between Kolkata and Mumbai (or anywhere)
+- ✅ **Multi-client** — Multiple users can join at once
+- ✅ **Real-time messaging** — Instant delivery with timestamps
+- ✅ **Room codes** — Auto-generated 10-character code prevents unwanted joins
+- ✅ **Zero dependencies** — Base system uses only Python's standard library
+- ✅ **Optional Tor** — Route through Tor network via Orbot for anonymity
+- ✅ **Tor hidden services** — Run as .onion for maximum privacy
+- ✅ **Cross-platform** — Windows, macOS, Linux
 
 ---
 
 ## 📋 System Requirements
 
 | Requirement | Version | Purpose |
-|------------|---------|---------|
-| **Python** | 3.6+ | Core runtime |
-| **Tor** | Latest | Encryption (optional) |
-| **PySocks** | Latest | Tor SOCKS support (optional) |
-| **Stem** | Latest | Tor hidden services (optional) |
-| **OS** | Windows/macOS/Linux | Full compatibility |
-
----
-
-## 💾 Installation
-
-### Prerequisites
-
-<details>
-<summary><b>Step 1: Install Python 3</b></summary>
-
-**Windows:**
-```bash
-# Download from https://www.python.org/downloads/
-# Or use Chocolatey:
-choco install python
-```
-
-**macOS:**
-```bash
-brew install python3
-```
-
-**Linux (Ubuntu/Debian):**
-```bash
-sudo apt-get update
-sudo apt-get install python3 python3-pip
-```
-
-**Linux (Fedora/RHEL):**
-```bash
-sudo dnf install python3 python3-pip
-```
-
-</details>
-
-<details>
-<summary><b>Step 2: Install Tor (Optional but Recommended)</b></summary>
-
-**Windows:**
-- Download from [torproject.org](https://www.torproject.org/download/)
-- Or: `choco install tor`
-
-**macOS:**
-```bash
-brew install tor
-```
-
-**Linux (Ubuntu/Debian):**
-```bash
-sudo apt-get install tor
-```
-
-**Linux (Fedora/RHEL):**
-```bash
-sudo dnf install tor
-```
-
-</details>
-
-<details>
-<summary><b>Step 3: Install Python Dependencies (Optional)</b></summary>
-
-For Tor SOCKS support:
-```bash
-pip3 install PySocks --break-system-packages
-```
-
-For Tor hidden services:
-```bash
-pip3 install stem --break-system-packages
-```
-
-Or use automatic installer:
-```bash
-python3 install_dependencies.py
-```
-
-</details>
-
-### Quick Install (One Command)
-
-```bash
-# Install recommended dependencies
-pip3 install PySocks stem --break-system-packages
-
-# Verify installation
-python3 -c "import socks; print('✅ PySocks installed!')"
-python3 -c "from stem.control import Controller; print('✅ Stem installed!')"
-```
+|---|---|---|
+| Python | 3.6+ | Core runtime |
+| PySocks | Latest | Tor SOCKS support (optional) |
+| Stem | Latest | Tor hidden services (optional) |
+| Orbot (Android) | Latest | Tor proxy on mobile (optional) |
 
 ---
 
 ## 🚀 Quick Start
 
-### Method 1: Direct Chat (No Encryption) - 2 Minutes
+### Same Network (Local / Same WiFi)
 
 ```bash
-# Terminal 1: Start Server
-python3 chat_server.py
+# Terminal 1 — start server
+python3 chat-server.py
 
-# Terminal 2: Start Client
-python3 chat_client.py
+# Terminal 2 — start client (same machine or same WiFi)
+python3 chat-cilent.py
+# Enter the local IP shown by the server
 ```
 
-**Perfect for:** Local network testing  
-**Speed:** ⚡⚡⚡ Fastest  
-**Encryption:** ❌ None
+### Over the Internet (Different Cities / Networks)
+
+See the [Internet Setup section](#-connecting-over-the-internet) below — this requires one extra step (port forwarding or ngrok).
 
 ---
 
-### Method 2: Tor SOCKS Encrypted (Recommended) - 5 Minutes
+## 🌐 Connecting Over the Internet
 
+This is the most important section if you want to chat with someone far away.
+
+### The Problem
+
+When the server runs, it only has a **local IP** (e.g. `192.168.1.5`) — this is only reachable from the same WiFi. For a friend in another city to connect, they need your **public IP**, and your router needs to forward traffic to your machine.
+
+### Method A — Port Forwarding (Recommended, Free)
+
+**On the server side (the person running `chat-server.py`):**
+
+1. Run the server — it will print your **Public IP** automatically:
+   ```
+   Public IP (internet) : 103.xx.xx.xx:5000
+   ```
+
+2. Open your **router settings** (usually http://192.168.1.1 or http://192.168.0.1 in your browser).
+
+3. Find **Port Forwarding** (may be under "Advanced", "NAT", or "Virtual Server").
+
+4. Add a new rule:
+   ```
+   External Port : 5000
+   Internal IP   : (your local IP shown by the server, e.g. 192.168.1.5)
+   Internal Port : 5000
+   Protocol      : TCP
+   ```
+
+5. Save and apply.
+
+6. Share your **Public IP** and **Room Code** with your friend:
+   ```
+   IP   → 103.xx.xx.xx
+   Port → 5000
+   Code → A7B2K9F4M1
+   ```
+
+**On the client side (your friend):**
 ```bash
-# Terminal 1: Start Tor
-tor --SocksPort 9050
-
-# Terminal 2: Start Server
-python3 chat_server.py
-
-# Terminal 3: Start Tor Client
-python3 chat_client_tor.py
-```
-
-**Perfect for:** Privacy from ISP, anonymity  
-**Speed:** ⚡⚡ Good  
-**Encryption:** ✅ Full encryption  
-**Status:** 🌟 RECOMMENDED
-
----
-
-### Method 3: Tor Hidden Service (Maximum Privacy) - 10 Minutes
-
-```bash
-# Terminal 1: Start Tor with Control Port
-tor --ControlPort 9051 --CookieAuthentication 1
-
-# Terminal 2: Start Hidden Service Server
-python3 chat_server_onion.py --hidden-service
-# Output: 🧅 Onion Address: abc123def456.onion
-
-# Terminal 3: Connect to Hidden Service
-python3 chat_client_tor.py --host abc123def456.onion
-```
-
-**Perfect for:** Maximum privacy, censorship resistance  
-**Speed:** ⚡ Slower but secure  
-**Encryption:** ✅ Full + server hidden  
-**Status:** 🔒 Maximum security
-
----
-
-## 📖 Usage Guide
-
-### Commands
-
-Once connected to the chat, use these commands:
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `/users` | List online users | `/users` |
-| `/help` | Show all commands | `/help` |
-| `/quit` or `/exit` | Disconnect | `/quit` |
-| `/leave` | Disconnect (alias) | `/leave` |
-| `message` | Send message | `Hello everyone!` |
-
-### Client Options
-
-```bash
-# Standard client
-python3 chat_client.py
-
-# Tor client with options
-python3 chat_client_tor.py --help
-
-# Output options:
-#   --host HOST           Server host (default: localhost)
-#   --port PORT          Server port (default: 5000)
-#   --no-tor             Disable Tor (use direct connection)
-#   --tor-port TOR_PORT  Tor SOCKS port (default: 9050)
-```
-
-### Server Options
-
-```bash
-# Standard server
-python3 chat_server.py
-
-# Tor hidden service server
-python3 chat_server_onion.py --help
-
-# Output options:
-#   --host HOST          Bind to host (default: localhost)
-#   --port PORT         Port (default: 5000)
-#   --hidden-service    Run as Tor hidden service
+python3 chat-cilent.py
+# When asked for Server IP: enter 103.xx.xx.xx  (the public IP)
+# Enter the Room Code
+# Enter a username
 ```
 
 ---
 
-## 🧪 Testing
+### Method B — ngrok (Easiest, No Router Access Needed)
 
-### Run All Tests
+If you can't access your router (e.g. hostel, office, rented connection), use ngrok — it creates a public tunnel to your local server for free.
 
 ```bash
-# Using Python unittest (built-in)
-python3 test_chat.py
+# Step 1: Install ngrok
+pip3 install pyngrok --break-system-packages
+# OR download from https://ngrok.com/download
 
-# Expected output:
-# Ran 31 tests in 0.002s
-# OK ✅
+# Step 2: Start your server first
+python3 chat-server.py
+
+# Step 3: In a new terminal, create the tunnel
+ngrok tcp 5000
 ```
 
-### Test Coverage
-
+ngrok will print something like:
 ```
-✅ Server initialization & configuration
-✅ Client initialization & username validation
-✅ Message broadcasting
-✅ Multiple client scenarios
-✅ Command handling
-✅ Message formatting & timestamps
-✅ Edge cases (special chars, unicode, long messages)
-✅ Performance benchmarks
+Forwarding  tcp://0.tcp.ngrok.io:12345 -> localhost:5000
 ```
 
-**31 tests, 100% passing** ✅
+Share `0.tcp.ngrok.io` as the IP and `12345` as the port with your friend.  
+Your friend connects using:
+```bash
+python3 chat-cilent.py
+# Server IP: 0.tcp.ngrok.io
+# Port: 5000  (the client always uses 5000; ngrok handles the mapping)
+```
+
+> **Note:** With ngrok, tell your friend to enter the full host `0.tcp.ngrok.io` at the IP prompt. The client port stays 5000.
 
 ---
 
-## 📁 Project Structure
+## 🧅 Tor / Orbot Setup
 
-```
-Terminal Chat System/
-│
-├── 📱 Applications (5 files)
-│   ├── chat_server.py                 # Standard server (181 lines)
-│   ├── chat_client.py                 # Standard client (170 lines)
-│   ├── chat_client_tor.py             # Tor SOCKS client (260 lines) ⭐
-│   ├── chat_server_onion.py           # Tor hidden service (350 lines) ⭐
-│   └── chat_client_simple.py          # No-deps fallback (200 lines)
-│
-├── 🧪 Testing (3 files)
-│   ├── test_chat.py                   # 31 unit tests (422 lines)
-│   ├── TESTING.md                     # Testing guide
-│   └── pytest.ini                     # Test configuration
-│
-├── 📖 Documentation (9 files)
-│   ├── README.md                      # Main documentation
-│   ├── TOR_QUICKSTART.md              # 5-minute setup guide ⭐
-│   ├── TOR_VISUAL_GUIDE.md            # Diagrams & flowcharts
-│   ├── TOR_GUIDE.md                   # Complete technical guide
-│   ├── TOR_OVERVIEW.txt               # Quick reference
-│   ├── TOR_SUMMARY.md                 # Feature overview
-│   ├── QUICK_START.md                 # 30-second setup
-│   ├── INDEX.md                       # File navigation
-│   └── DOWNLOAD_GUIDE.md              # Download instructions
-│
-├── 🔧 Installation (4 files)
-│   ├── INSTALL_PYSOCKS.md             # PySocks installation guide
-│   ├── PYSOCKS_QUICKREF.md            # Quick reference
-│   ├── PYSOCKS_INSTALL_GUIDE.txt      # Text format guide
-│   └── install_dependencies.py        # Automatic installer
-│
-└── 📋 Reference (2 files)
-    ├── FIX_SUMMARY.md                 # Fixes applied
-    └── FILE_TREE.md                   # Visual file tree
-```
+### ⚠️ Important: Use Orbot, NOT Tor Browser
 
----
+A common mistake is installing **Tor Browser** (available on Play Store) thinking it enables Tor for other apps. It does not — Tor Browser only routes its own internal traffic.
 
-## 📥 What to Download
+To use Tor as a SOCKS proxy (which this chat app requires), you need **Orbot**.
 
-### 🌟 Recommended Package (10 Files)
+| App | What it does | Works for this chat? |
+|---|---|---|
+| Tor Browser | Browsing only | ❌ No |
+| **Orbot** | System-wide SOCKS5 proxy on port 9050 | ✅ Yes |
 
-**Applications:**
-- `chat_server.py` - Main server
-- `chat_client.py` - Standard client
-- `chat_client_tor.py` - Tor client ⭐
-- `chat_server_onion.py` - Tor hidden service
-- `chat_client_simple.py` - Fallback client
+### Install Orbot
 
-**Documentation:**
-- `TOR_QUICKSTART.md` - Start here! ⭐
-- `TOR_VISUAL_GUIDE.md` - Diagrams
-- `README.md` - Main docs
-- `QUICK_START.md` - Quick reference
-- `TOR_OVERVIEW.txt` - Text reference
+- **Android**: [Orbot on Play Store](https://play.google.com/store/apps/details?id=org.torproject.android) or [F-Droid](https://f-droid.org/packages/org.torproject.android.binary/)
+- **iOS**: [Onion Browser](https://apps.apple.com/app/onion-browser/id519296448) (different flow, limited proxy use)
+- **Linux/macOS**: `sudo apt install tor` or `brew install tor`
+- **Windows**: Download [Tor Expert Bundle](https://www.torproject.org/download/tor/) (not Tor Browser)
 
-**Total Size:** ~150 KB  
-**Setup Time:** 15 minutes  
-**Result:** Fully encrypted & anonymous! 🔐
+### Using Tor Mode
 
----
+```bash
+# Step 1: Start Orbot (Android) or Tor daemon (desktop)
+#   Android: Open Orbot → tap Start → wait for "Connected"
+#   Linux/macOS: tor --SocksPort 9050
+#   Windows: Run tor.exe from the Expert Bundle
 
-## 🔐 Security Features
+# Step 2: Install PySocks
+pip3 install PySocks --break-system-packages
 
-### Encryption
-```
-✅ End-to-end encryption via Tor
-✅ SOCKS5 proxy routing
-✅ 256-bit equivalent encryption
-✅ No cleartext traffic
+# Step 3: Run server (no --tor flag needed unless using hidden service)
+python3 chat-server.py
+
+# Step 4: Run client with Tor
+python3 chat-cilent.py --tor
 ```
 
-### Privacy
-```
-✅ IP address hidden
-✅ ISP cannot see content
-✅ Anonymous usernames
-✅ No tracking or logging
-```
+### Tor Hidden Service (Maximum Privacy — Server IP Hidden)
 
-### Anonymity
-```
-✅ Tor network routing (3+ hops)
-✅ Hidden service support (.onion)
-✅ Server IP protection
-✅ Censorship resistant
+```bash
+# Requires: stem library + Tor running with ControlPort
+pip3 install stem --break-system-packages
+
+# Start Tor with control port
+tor --SocksPort 9050 --ControlPort 9051 --CookieAuthentication 1
+
+# Start server in Tor hidden service mode
+python3 chat-server.py --tor
+# Server will print an .onion address
+
+# Client connects to the .onion address
+python3 chat-cilent.py --tor
+# Enter the .onion address when asked for server IP
 ```
 
 ---
 
-## ⚙️ Architecture
+## 📖 Commands (In Chat)
 
-<details>
-<summary><b>Network Diagrams</b></summary>
-
-### Direct Connection
-```
-Client ←→ Server
-         (unencrypted)
-```
-
-### Tor SOCKS Proxy
-```
-Client → Tor SOCKS → Tor Network → Server
-        (9050)      (3+ hops)
-                    (encrypted)
-```
-
-### Tor Hidden Service
-```
-Client → Tor Network ← Server
-        (encrypted)    (.onion)
-        (3+ hops)      (hidden)
-```
-
-</details>
+| Command | Description |
+|---|---|
+| `/users` | List online users |
+| `/count` | Show number of online users |
+| `/help` | Show available commands |
+| `/quit` | Disconnect |
 
 ---
 
-## 🛠️ Configuration
+## 📁 File Overview
 
-### Custom Port (Server)
-```bash
-python3 chat_server.py --port 8000
 ```
-
-### Custom Host (Client)
-```bash
-python3 chat_client.py --host 192.168.1.100
-```
-
-### Custom Tor Port
-```bash
-# Start Tor on different port
-tor --SocksPort 9150
-
-# Connect with custom Tor port
-python3 chat_client_tor.py --tor-port 9150
-```
-
-### Hidden Service Configuration
-
-Edit `torrc`:
-```bash
-SocksPort 9050
-ControlPort 9051
-CookieAuthentication 1
-
-HiddenServiceDir /var/lib/tor/chat_service
-HiddenServicePort 80 127.0.0.1:5000
-```
-
-Then start Tor:
-```bash
-tor -f ~/.tor/torrc
+AnonymChat/
+├── chat-server.py        # Server — run this on the host machine
+├── chat-cilent.py        # Client — run this to connect
+├── test-chat.py          # Unit tests
+├── enviorment-check.py   # Environment checker & auto-installer
+├── README.md             # This file
+└── LICENSE               # MIT License
 ```
 
 ---
 
 ## 🚨 Troubleshooting
 
-<details>
-<summary><b>Connection Issues</b></summary>
+### "Connection refused" (no Tor)
+- Make sure the server is running before the client tries to connect.
+- Check the IP and port are correct.
+- If connecting over the internet, verify port forwarding is set up correctly.
 
-**"Connection refused"**
-```bash
-# Check if server is running
-lsof -i :5000  # macOS/Linux
-netstat -ano | findstr :5000  # Windows
+### "Connection refused" (Tor mode)
+This almost always means the Tor SOCKS proxy is not running on port 9050.
+- **Android**: Open **Orbot** (not Tor Browser), tap **Start**, wait until it says **Connected**.
+- **Linux/macOS**: Run `tor --SocksPort 9050` in a terminal.
+- **Windows**: Start `tor.exe` from the Tor Expert Bundle.
 
-# Or just start server:
-python3 chat_server.py
-```
+### "Connection timed out"
+- Port forwarding may not be set up, or the router firewall is blocking port 5000.
+- Try Method B (ngrok) instead.
 
-**"Cannot connect to Tor"**
-```bash
-# Check if Tor is running
-ps aux | grep tor  # macOS/Linux
-tasklist | findstr tor  # Windows
+### "Address already in use"
+- Another instance of the server is already running.
+- Kill it with `pkill -f chat-server.py` (Linux/macOS) or close the terminal.
 
-# Start Tor:
-tor --SocksPort 9050
-```
+### Friend can connect locally but not from internet
+- Port forwarding is the missing step. Follow Method A or use ngrok (Method B).
 
-</details>
-
-<details>
-<summary><b>Installation Issues</b></summary>
-
-**"PySocks not found"**
-```bash
-pip3 install PySocks --break-system-packages
-```
-
-**"Stem not found"**
-```bash
-pip3 install stem --break-system-packages
-```
-
-**"pip3 not found"**
-```bash
-python3 -m pip install PySocks --break-system-packages
-```
-
-</details>
-
-<details>
-<summary><b>Performance Issues</b></summary>
-
-**Slow connection with Tor**
-- Normal! Tor adds 3-5 second latency
-- This is the security cost
-- Worth it for anonymity
-
-**Hidden service slow**
-- Expected behavior
-- Up to 10 seconds latency
-- Maximum security provided
-
-</details>
+### ngrok tunnel works but port is different
+- Your friend should enter the ngrok hostname (e.g. `0.tcp.ngrok.io`) as the server IP.  
+  The client code uses port 5000 internally — ngrok handles the external port mapping.
 
 ---
 
-## 📊 Performance Metrics
+## ⚙️ Architecture
 
-| Operation | Time | Notes |
-|-----------|------|-------|
-| Direct connection | <100ms | Fastest |
-| Tor SOCKS | 200-500ms | Good balance |
-| Hidden service | 500-2000ms | Most secure |
-| Message broadcast | <50ms | Multi-client |
-| Circuit establishment | 3-10s | One-time |
+### Direct Internet Connection (with port forwarding)
+```
+Friend's Client → Internet → Router (port forward) → Your Machine (server)
+```
 
----
+### ngrok Tunnel
+```
+Friend's Client → Internet → ngrok servers → localhost:5000 (your server)
+```
 
-## 📚 Documentation
+### Tor via Orbot
+```
+Client → Orbot (SOCKS5 :9050) → Tor Network (3+ hops) → Server
+```
 
-| Document | Purpose | Read Time |
-|----------|---------|-----------|
-| **TOR_QUICKSTART.md** | Fast setup guide | 5 min |
-| **TOR_VISUAL_GUIDE.md** | Diagrams & examples | 10 min |
-| **README.md** | Main documentation | 15 min |
-| **TOR_GUIDE.md** | Technical deep dive | 30 min |
-| **INSTALL_PYSOCKS.md** | PySocks installation | 5 min |
-| **TESTING.md** | Testing guide | 10 min |
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Areas for enhancement:
-
-- [ ] GUI client (tkinter/PyQt)
-- [ ] File sharing capability
-- [ ] Message encryption (additional layer)
-- [ ] User authentication
-- [ ] Message history/logging
-- [ ] Mobile client
-- [ ] Database backend
+### Tor Hidden Service
+```
+Client → Tor Network ← Server (.onion address, IP hidden)
+```
 
 ---
 
-## ⚖️ Legal & Ethical
+## 🧪 Testing
 
-### Legal Notice
-⚠️ **Warning:** Tor usage may be restricted in some countries. Please check your local laws before using.
+```bash
+python3 test-chat.py
+# Expected: 25/25 tests passing
+```
 
-### Legitimate Uses
-- ✅ Privacy protection
-- ✅ Censorship resistance
-- ✅ Secure communication
-- ✅ Whistleblower protection
-- ✅ Activist protection
+---
 
-### Security Best Practices
-- ✅ Keep Tor updated
-- ✅ Use anonymous usernames
-- ✅ Don't maximize terminal (fingerprinting)
-- ✅ Assume messages might be logged
-- ✅ Verify Tor is working
+## ⚖️ Legal Notice
+
+Tor usage may be restricted in some countries. Verify local laws before use.  
+This tool is intended for legitimate privacy protection and secure communication.
 
 ---
 
 ## 📄 License
 
-BSD License - See LICENSE file for details
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
 ## 🙏 Acknowledgments
 
-- [Tor Project](https://www.torproject.org/) - Onion routing & anonymity
-- [PySocks](https://github.com/Anorov/PySocks) - SOCKS client library
-- [Stem](https://stem.torproject.org/) - Tor control library
-- Python Community - Excellent standard library
-
----
-
-## 📞 Support
-
-**Issues or Questions?**
-
-1. Check the relevant documentation file
-2. See troubleshooting sections
-3. Review test files for usage examples
-4. Check INSTALL_PYSOCKS.md for installation help
-
-**Most Common Solutions:**
-```bash
-# Install all dependencies at once
-python3 install_dependencies.py
-
-# Verify Tor is working
-torsocks curl http://ipecho.net/plain
-
-# Run tests to validate setup
-python3 test_chat.py
-```
+- [Tor Project](https://www.torproject.org/) — Onion routing & anonymity
+- [Orbot](https://orbot.app/) — Tor proxy for Android
+- [PySocks](https://github.com/Anorov/PySocks) — SOCKS client library
+- [Stem](https://stem.torproject.org/) — Tor control library
+- [ngrok](https://ngrok.com/) — Secure tunneling
 
 ---
 
 <div align="center">
 
-## 🎉 Ready to Get Started?
-
-### Quick Start Path (15 Minutes)
-
-1. **Download** → Recommended Package (10 files)
-2. **Read** → TOR_QUICKSTART.md
-3. **Install** → PySocks & Tor
-4. **Run** → 3 terminal windows
-5. **Chat** → Encrypted & anonymous! 🔐
-
-### Commands to Get Started
-
-```bash
-# Install dependencies
-python3 install_dependencies.py
-
-# Start Tor
-tor --SocksPort 9050
-
-# Start server (new terminal)
-python3 chat_server.py
-
-# Start client (new terminal)
-python3 chat_client_tor.py
-```
-
----
-
-### Key Files to Start With
-
-1. **📥 DOWNLOAD_GUIDE.md** - What files to download
-2. **📖 TOR_QUICKSTART.md** - 5-minute setup
-3. **📊 TOR_VISUAL_GUIDE.md** - Diagrams & examples
-4. **🔧 INSTALL_PYSOCKS.md** - Installation help
-
----
-
-<br/>
-
-**Status:** ✅ Production Ready  
-**Tests:** ✅ 31/31 Passing  
-**Security:** 🔐 Tor Encrypted  
-**Documentation:** 📚 Comprehensive  
-
-<br/>
-
-### 🚀 Start Your Secure Chat Now!
-
-[⬇️ Download Files](DOWNLOAD_GUIDE.md) • [📖 Read Docs](TOR_QUICKSTART.md) • [🧪 Run Tests](test_chat.py)
-
----
-
-**Terminal Chat System** © 2025 | Secure • Anonymous • Open Source
-
-![Python](https://img.shields.io/badge/Made%20with-Python-blue?style=flat-square&logo=python)
-![Tor](https://img.shields.io/badge/Encrypted%20with-Tor-red?style=flat-square&logo=torproject)
-![Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4%EF%B8%8F-red?style=flat-square)
+**AnonymChat** | Secure • Cross-network • Open Source
 
 </div>
-💡 Use Ctrl+C to disconnect gracefully  
-
----
-
-Enjoy your secure, ad-free, no-account-needed chat! 🎉
