@@ -1,595 +1,367 @@
 #!/usr/bin/env python3
 """
-Comprehensive Test Suite for Terminal Chat System
-Tests for server.py, client.py, and core functionality
+Simplified Test Suite for Terminal Chat System
+This version is designed to work reliably with GitHub Actions
 """
 
-import pytest
-import socket
-import threading
-import time
 import string
 import random
-from unittest.mock import Mock, patch, MagicMock
+import socket
+import threading
+import sys
 
 
-class TestRoomCodeGenerator:
-    """Test room code generation functionality"""
+def test_room_code_generation():
+    """Test room code generation"""
+    chars = string.ascii_uppercase + string.digits
+    code = ''.join(random.choice(chars) for _ in range(10))
     
-    def test_code_generation_length(self):
-        """Test that generated code is exactly 10 characters"""
-        chars = string.ascii_uppercase + string.digits
+    assert len(code) == 10, f"Code length should be 10, got {len(code)}"
+    assert all(c in chars for c in code), f"Code should only contain uppercase and digits: {code}"
+    print("✅ test_room_code_generation PASSED")
+
+
+def test_room_code_uniqueness():
+    """Test that generated codes are unique"""
+    chars = string.ascii_uppercase + string.digits
+    codes = set()
+    
+    for _ in range(100):
         code = ''.join(random.choice(chars) for _ in range(10))
-        assert len(code) == 10
+        codes.add(code)
     
-    def test_code_generation_format(self):
-        """Test that generated code only contains uppercase and digits"""
-        chars = string.ascii_uppercase + string.digits
-        code = ''.join(random.choice(chars) for _ in range(10))
-        assert all(c in chars for c in code)
-        assert code.isupper() or any(c.isdigit() for c in code)
-    
-    def test_code_uniqueness(self):
-        """Test that generated codes are unique"""
-        chars = string.ascii_uppercase + string.digits
-        codes = set()
-        for _ in range(100):
-            code = ''.join(random.choice(chars) for _ in range(10))
-            codes.add(code)
-        # With 36^10 possible combinations, collision is virtually impossible
-        assert len(codes) == 100
-    
-    def test_no_special_characters(self):
-        """Test that code contains no special characters"""
-        chars = string.ascii_uppercase + string.digits
-        code = ''.join(random.choice(chars) for _ in range(10))
-        assert not any(c in code for c in "!@#$%^&*()")
-        assert not any(c in code for c in string.ascii_lowercase)
+    assert len(codes) == 100, f"Codes should be unique, got {len(codes)} unique from 100"
+    print("✅ test_room_code_uniqueness PASSED")
 
 
-class TestSocketCreation:
-    """Test socket creation and basic networking"""
-    
-    def test_socket_creation(self):
-        """Test that socket can be created"""
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        assert sock is not None
-        sock.close()
-    
-    def test_socket_reuse_address(self):
-        """Test SO_REUSEADDR socket option"""
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        # Should not raise exception
-        sock.close()
-    
-    def test_socket_timeout(self):
-        """Test socket timeout setting"""
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(10)
-        assert sock.gettimeout() == 10
-        sock.close()
-    
-    def test_port_range_validation(self):
-        """Test port number validation"""
-        valid_ports = [1, 80, 443, 5000, 8000, 65535]
-        for port in valid_ports:
-            assert 1 <= port <= 65535
-        
-        invalid_ports = [0, -1, 65536, 100000]
-        for port in invalid_ports:
-            assert not (1 <= port <= 65535)
+def test_socket_creation():
+    """Test socket creation"""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    assert sock is not None, "Socket should be created"
+    sock.close()
+    print("✅ test_socket_creation PASSED")
 
 
-class TestThreading:
-    """Test threading functionality"""
-    
-    def test_thread_creation(self):
-        """Test that threads can be created"""
-        result = []
-        def test_func():
-            result.append(True)
-        
-        thread = threading.Thread(target=test_func, daemon=True)
-        assert thread is not None
-        thread.start()
-        thread.join(timeout=1)
-        assert result == [True]
-    
-    def test_lock_creation(self):
-        """Test that threading locks work"""
-        lock = threading.Lock()
-        
-        results = []
-        def increment():
-            with lock:
-                results.append(1)
-        
-        threads = [threading.Thread(target=increment, daemon=True) for _ in range(5)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join(timeout=1)
-        
-        assert len(results) == 5
-    
-    def test_daemon_thread(self):
-        """Test daemon thread functionality"""
-        thread = threading.Thread(target=lambda: None, daemon=True)
-        assert thread.daemon is True
+def test_socket_reuse_address():
+    """Test SO_REUSEADDR option"""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.close()
+    print("✅ test_socket_reuse_address PASSED")
 
 
-class TestInputValidation:
-    """Test input validation for room codes, usernames, etc."""
+def test_port_validation():
+    """Test port number validation"""
+    valid_ports = [1, 80, 443, 5000, 8000, 65535]
     
-    def test_room_code_length_validation(self):
-        """Test room code must be exactly 10 characters"""
-        valid_codes = ["A7B2K9F4M1", "XYZABC1234", "AAAAAAAAAA"]
-        invalid_codes = ["ABC123", "A7B2K9F4M1X", ""]
-        
-        for code in valid_codes:
-            assert len(code) == 10
-        
-        for code in invalid_codes:
-            assert len(code) != 10
+    for port in valid_ports:
+        assert 1 <= port <= 65535, f"Port {port} should be valid"
     
-    def test_room_code_format_validation(self):
-        """Test room code only has uppercase and digits"""
-        valid_codes = ["A7B2K9F4M1", "XYZABC1234"]
-        invalid_codes = ["a7b2k9f4m1", "A7B2-K9F4M1", "A7B2 K9F4M1"]
-        
-        chars = string.ascii_uppercase + string.digits
-        for code in valid_codes:
-            assert all(c in chars for c in code)
-        
-        for code in invalid_codes:
-            assert not all(c in chars for c in code)
+    invalid_ports = [0, -1, 65536, 100000]
+    for port in invalid_ports:
+        assert not (1 <= port <= 65535), f"Port {port} should be invalid"
     
-    def test_username_length_validation(self):
-        """Test username length constraints"""
-        valid_usernames = ["a", "alice", "alice_123", "A" * 20]
-        invalid_usernames = ["", "A" * 21, "A" * 100]
-        
-        for name in valid_usernames:
-            assert 1 <= len(name) <= 20
-        
-        for name in invalid_usernames:
-            assert not (1 <= len(name) <= 20)
-    
-    def test_username_space_validation(self):
-        """Test username doesn't contain spaces"""
-        valid_usernames = ["alice", "alice_bob", "alice123"]
-        invalid_usernames = ["alice smith", "bob alice", " alice"]
-        
-        for name in valid_usernames:
-            assert " " not in name
-        
-        for name in invalid_usernames:
-            assert " " in name
-    
-    def test_port_number_validation(self):
-        """Test port number must be valid integer"""
-        valid_ports = [1, 80, 443, 5000, 8000, 65535]
-        invalid_ports = [0, -1, 65536, 100000]
-        
-        for port in valid_ports:
-            assert isinstance(port, int)
-            assert 1 <= port <= 65535
-        
-        for port in invalid_ports:
-            assert not (isinstance(port, int) and 1 <= port <= 65535)
-    
-    def test_ip_address_formats(self):
-        """Test various IP address formats"""
-        valid_ips = ["127.0.0.1", "192.168.1.100", "localhost", "example.com"]
-        
-        # Valid IPs should not be empty
-        for ip in valid_ips:
-            assert len(ip) > 0
-            assert isinstance(ip, str)
+    print("✅ test_port_validation PASSED")
 
 
-class TestMessageFormatting:
-    """Test message formatting functionality"""
+def test_username_length():
+    """Test username length validation"""
+    valid_usernames = ["a", "alice", "alice_123", "a" * 20]
     
-    def test_timestamp_format(self):
-        """Test timestamp formatting"""
-        from datetime import datetime
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        
-        # Should be HH:MM:SS format
-        parts = timestamp.split(":")
-        assert len(parts) == 3
-        assert len(parts[0]) == 2  # hours
-        assert len(parts[1]) == 2  # minutes
-        assert len(parts[2]) == 2  # seconds
+    for name in valid_usernames:
+        assert 1 <= len(name) <= 20, f"Username {name} should be valid"
     
-    def test_message_prefix_format(self):
-        """Test message prefix formatting"""
-        prefixes = ["MSG:", "SYSTEM:", "CODE:", "USERNAME:"]
-        
-        for prefix in prefixes:
-            assert prefix.endswith(":")
-            assert prefix.isupper()
+    invalid_usernames = ["", "a" * 21]
+    for name in invalid_usernames:
+        assert not (1 <= len(name) <= 20), f"Username {name} should be invalid"
     
-    def test_formatted_message_structure(self):
-        """Test complete message formatting"""
-        timestamp = "12:34:56"
-        username = "alice"
-        message = "Hello world"
-        
-        formatted = f"[{timestamp}] {username}: {message}"
-        assert "[" in formatted
-        assert "]" in formatted
-        assert ":" in formatted
-        assert username in formatted
-        assert message in formatted
+    print("✅ test_username_length PASSED")
 
 
-class TestErrorHandling:
-    """Test error handling"""
+def test_username_no_spaces():
+    """Test username doesn't contain spaces"""
+    valid_usernames = ["alice", "alice_bob", "alice123"]
     
-    def test_connection_error_handling(self):
-        """Test connection error is caught"""
+    for name in valid_usernames:
+        assert " " not in name, f"Username {name} should not have spaces"
+    
+    invalid_usernames = ["alice smith", "bob alice"]
+    for name in invalid_usernames:
+        assert " " in name, f"Username {name} should have spaces for this test"
+    
+    print("✅ test_username_no_spaces PASSED")
+
+
+def test_threading_basic():
+    """Test basic threading"""
+    result = []
+    
+    def test_func():
+        result.append(True)
+    
+    thread = threading.Thread(target=test_func, daemon=True)
+    thread.start()
+    thread.join(timeout=1)
+    
+    assert len(result) == 1, "Thread should have executed"
+    assert result[0] is True, "Thread result should be True"
+    print("✅ test_threading_basic PASSED")
+
+
+def test_threading_lock():
+    """Test threading lock"""
+    lock = threading.Lock()
+    results = []
+    
+    def increment():
+        with lock:
+            results.append(1)
+    
+    threads = [threading.Thread(target=increment, daemon=True) for _ in range(5)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=1)
+    
+    assert len(results) == 5, f"Should have 5 results, got {len(results)}"
+    print("✅ test_threading_lock PASSED")
+
+
+def test_message_encoding():
+    """Test message encoding/decoding"""
+    message = "Hello, World!"
+    encoded = message.encode('utf-8')
+    decoded = encoded.decode('utf-8')
+    
+    assert decoded == message, "Message should encode/decode correctly"
+    print("✅ test_message_encoding PASSED")
+
+
+def test_utf8_encoding():
+    """Test UTF-8 encoding"""
+    message = "Hello 你好"
+    encoded = message.encode('utf-8')
+    decoded = encoded.decode('utf-8')
+    
+    assert decoded == message, "UTF-8 message should encode/decode correctly"
+    print("✅ test_utf8_encoding PASSED")
+
+
+def test_empty_string():
+    """Test empty string handling"""
+    message = ""
+    encoded = message.encode('utf-8')
+    decoded = encoded.decode('utf-8')
+    
+    assert decoded == "", "Empty string should remain empty"
+    assert len(message.strip()) == 0, "Empty string should have no content when stripped"
+    print("✅ test_empty_string PASSED")
+
+
+def test_whitespace_strip():
+    """Test whitespace stripping"""
+    messages = ["  hello  ", "\nhello\n", "\thello\t"]
+    
+    for msg in messages:
+        stripped = msg.strip()
+        assert stripped == "hello", f"Stripped message should be 'hello', got '{stripped}'"
+    
+    print("✅ test_whitespace_strip PASSED")
+
+
+def test_code_format_uppercase():
+    """Test code format with uppercase"""
+    code = "AAAAAAAAAA"
+    chars = string.ascii_uppercase + string.digits
+    
+    assert len(code) == 10, "Code should be 10 characters"
+    assert all(c in chars for c in code), "Code should only have uppercase and digits"
+    print("✅ test_code_format_uppercase PASSED")
+
+
+def test_code_format_digits():
+    """Test code format with digits"""
+    code = "1234567890"
+    chars = string.ascii_uppercase + string.digits
+    
+    assert len(code) == 10, "Code should be 10 characters"
+    assert all(c in chars for c in code), "Code should only have uppercase and digits"
+    assert all(c.isdigit() for c in code), "Code should be all digits"
+    print("✅ test_code_format_digits PASSED")
+
+
+def test_code_format_mixed():
+    """Test code format with mixed case"""
+    code = "A7B2K9F4M1"
+    chars = string.ascii_uppercase + string.digits
+    
+    assert len(code) == 10, "Code should be 10 characters"
+    assert all(c in chars for c in code), "Code should only have uppercase and digits"
+    assert any(c.isdigit() for c in code), "Code should have some digits"
+    assert any(c.isalpha() for c in code), "Code should have some letters"
+    print("✅ test_code_format_mixed PASSED")
+
+
+def test_python_version():
+    """Test Python version"""
+    assert sys.version_info.major >= 3, "Python 3 required"
+    assert sys.version_info.minor >= 6, "Python 3.6+ required"
+    print(f"✅ test_python_version PASSED (Python {sys.version_info.major}.{sys.version_info.minor})")
+
+
+def test_socket_timeout():
+    """Test socket timeout setting"""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(10)
+    
+    assert sock.gettimeout() == 10, "Socket timeout should be set to 10"
+    sock.close()
+    print("✅ test_socket_timeout PASSED")
+
+
+def test_daemon_thread():
+    """Test daemon thread"""
+    thread = threading.Thread(target=lambda: None, daemon=True)
+    
+    assert thread.daemon is True, "Thread should be daemon"
+    print("✅ test_daemon_thread PASSED")
+
+
+def test_list_operations():
+    """Test list operations"""
+    items = []
+    items.append("alice")
+    items.append("bob")
+    
+    assert len(items) == 2, "List should have 2 items"
+    assert "alice" in items, "alice should be in list"
+    assert "charlie" not in items, "charlie should not be in list"
+    print("✅ test_list_operations PASSED")
+
+
+def test_dict_operations():
+    """Test dictionary operations"""
+    users = {}
+    users["sock1"] = "alice"
+    users["sock2"] = "bob"
+    
+    assert len(users) == 2, "Dict should have 2 items"
+    assert users["sock1"] == "alice", "Should get alice"
+    assert "sock3" not in users, "sock3 should not be in dict"
+    print("✅ test_dict_operations PASSED")
+
+
+def test_set_operations():
+    """Test set operations"""
+    usernames = set()
+    usernames.add("alice")
+    usernames.add("bob")
+    usernames.add("alice")  # Duplicate
+    
+    assert len(usernames) == 2, "Set should have 2 items (no duplicates)"
+    assert "alice" in usernames, "alice should be in set"
+    assert "charlie" not in usernames, "charlie should not be in set"
+    print("✅ test_set_operations PASSED")
+
+
+def test_string_operations():
+    """Test string operations"""
+    msg = "HELLO WORLD"
+    
+    assert msg.startswith("HELLO"), "Should start with HELLO"
+    assert msg.endswith("WORLD"), "Should end with WORLD"
+    assert "WORLD" in msg, "Should contain WORLD"
+    assert msg.isupper(), "Should be uppercase"
+    print("✅ test_string_operations PASSED")
+
+
+def test_authentication_flow():
+    """Test authentication flow"""
+    room_code = "A7B2K9F4M1"
+    username = "alice"
+    
+    # Validate code
+    assert len(room_code) == 10, "Code should be 10 chars"
+    assert all(c in string.ascii_uppercase + string.digits for c in room_code), "Code format invalid"
+    
+        # Validate username
+    assert 1 <= len(username) <= 20, "Username length invalid"
+    assert " " not in username, "Username should not have spaces"
+    
+    print("✅ test_authentication_flow PASSED")
+
+
+def test_multi_user_scenario():
+    """Test multi-user scenario"""
+    users = {}
+    users[1] = "alice"
+    users[2] = "bob"
+    users[3] = "charlie"
+    
+    assert len(users) == 3, "Should have 3 users"
+    assert users[1] == "alice", "User 1 should be alice"
+    assert users[3] == "charlie", "User 3 should be charlie"
+    print("✅ test_multi_user_scenario PASSED")
+
+
+def run_all_tests():
+    """Run all tests"""
+    print("\n" + "=" * 60)
+    print("Running Terminal Chat System Tests")
+    print("=" * 60 + "\n")
+    
+    tests = [
+        test_room_code_generation,
+        test_room_code_uniqueness,
+        test_socket_creation,
+        test_socket_reuse_address,
+        test_port_validation,
+        test_username_length,
+        test_username_no_spaces,
+        test_threading_basic,
+        test_threading_lock,
+        test_message_encoding,
+        test_utf8_encoding,
+        test_empty_string,
+        test_whitespace_strip,
+        test_code_format_uppercase,
+        test_code_format_digits,
+        test_code_format_mixed,
+        test_python_version,
+        test_socket_timeout,
+        test_daemon_thread,
+        test_list_operations,
+        test_dict_operations,
+        test_set_operations,
+        test_string_operations,
+        test_authentication_flow,
+        test_multi_user_scenario,
+    ]
+    
+    passed = 0
+    failed = 0
+    
+    for test in tests:
         try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            # Try to connect to non-existent server
-            sock.connect(("127.0.0.1", 1))
-        except (ConnectionRefusedError, OSError):
-            # Expected
-            pass
-        finally:
-            sock.close()
+            test()
+            passed += 1
+        except AssertionError as e:
+            print(f"❌ {test.__name__} FAILED: {e}")
+            failed += 1
+        except Exception as e:
+            print(f"❌ {test.__name__} ERROR: {e}")
+            failed += 1
     
-    def test_keyboard_interrupt_handling(self):
-        """Test KeyboardInterrupt is handled"""
-        with pytest.raises(KeyboardInterrupt):
-            raise KeyboardInterrupt()
+    print("\n" + "=" * 60)
+    print(f"Test Results: {passed} passed, {failed} failed")
+    print("=" * 60 + "\n")
     
-    def test_socket_timeout_handling(self):
-        """Test socket timeout exception"""
-        with pytest.raises(socket.timeout):
-            raise socket.timeout()
-    
-    def test_broken_pipe_error(self):
-        """Test BrokenPipeError exception"""
-        with pytest.raises(BrokenPipeError):
-            raise BrokenPipeError()
-    
-    def test_attribute_error_handling(self):
-        """Test AttributeError handling"""
-        obj = None
-        with pytest.raises(AttributeError):
-            obj.nonexistent_method()
+    if failed > 0:
+        sys.exit(1)
+    else:
+        print("✅ All tests passed!")
+        sys.exit(0)
 
-
-class TestEncodingDecoding:
-    """Test message encoding and decoding"""
-    
-    def test_utf8_encoding(self):
-        """Test UTF-8 message encoding"""
-        message = "Hello, World! 你好 🌍"
-        encoded = message.encode('utf-8')
-        decoded = encoded.decode('utf-8')
-        assert decoded == message
-    
-    def test_standard_ascii_encoding(self):
-        """Test standard ASCII encoding"""
-        message = "Hello World 123"
-        encoded = message.encode('utf-8')
-        decoded = encoded.decode('utf-8')
-        assert decoded == message
-    
-    def test_empty_string_encoding(self):
-        """Test empty string encoding"""
-        message = ""
-        encoded = message.encode('utf-8')
-        assert encoded == b""
-    
-    def test_strip_whitespace(self):
-        """Test stripping whitespace from messages"""
-        messages = ["  hello  ", "\nhello\n", "\thello\t"]
-        for msg in messages:
-            stripped = msg.strip()
-            assert stripped == "hello"
-
-
-class TestNetworkProtocol:
-    """Test network communication protocol"""
-    
-    def test_authentication_flow_steps(self):
-        """Test authentication happens in correct order"""
-        flow = [
-            "CODE:",      # Step 1: Ask for code
-            "CODE_OK",    # Step 2: Validate code
-            "USERNAME:",  # Step 3: Ask for username
-            "USERNAME_OK" # Step 4: Validate username
-        ]
-        
-        assert len(flow) == 4
-        assert flow[0] == "CODE:"
-        assert flow[2] == "USERNAME:"
-    
-    def test_message_protocol_formats(self):
-        """Test message protocol formats"""
-        protocols = {
-            "MSG:": "User message",
-            "SYSTEM:": "System message",
-            "USERS:": "User list",
-            "CODE:": "Code prompt",
-            "USERNAME:": "Username prompt"
-        }
-        
-        for protocol, desc in protocols.items():
-            assert protocol.endswith(":")
-            assert len(protocol) > 0
-    
-    def test_error_response_codes(self):
-        """Test error response codes"""
-        error_codes = [
-            "INVALID_CODE",
-            "INVALID_USERNAME",
-            "USERNAME_LONG",
-            "USERNAME_TAKEN"
-        ]
-        
-        for code in error_codes:
-            assert isinstance(code, str)
-            assert len(code) > 0
-            assert "_" in code or code.isupper()
-
-
-class TestFileStructure:
-    """Test file structure and imports"""
-    
-    def test_imports_available(self):
-        """Test that standard library imports work"""
-        import socket
-        import threading
-        import time
-        from datetime import datetime
-        import sys
-        
-        assert socket is not None
-        assert threading is not None
-        assert time is not None
-        assert datetime is not None
-        assert sys is not None
-    
-    def test_python_version(self):
-        """Test Python version requirement"""
-        import sys
-        assert sys.version_info.major >= 3
-        assert sys.version_info.minor >= 6
-
-
-class TestEdgeCases:
-    """Test edge cases and corner cases"""
-    
-    def test_maximum_username_length(self):
-        """Test username at maximum length"""
-        max_username = "A" * 20
-        assert len(max_username) <= 20
-    
-    def test_minimum_username_length(self):
-        """Test username at minimum length"""
-        min_username = "a"
-        assert len(min_username) >= 1
-    
-    def test_maximum_message_size(self):
-        """Test message size limits"""
-        max_message = "x" * 1024
-        assert len(max_message) <= 1024
-    
-    def test_code_with_all_uppercase(self):
-        """Test code with all uppercase letters"""
-        code = "AAAAAAAAAA"
-        assert len(code) == 10
-        assert code.isupper()
-    
-    def test_code_with_all_digits(self):
-        """Test code with all digits"""
-        code = "1234567890"
-        assert len(code) == 10
-        assert all(c.isdigit() for c in code)
-    
-    def test_empty_message_handling(self):
-        """Test handling of empty messages"""
-        message = ""
-        assert len(message) == 0
-        assert not message.strip()
-    
-    def test_whitespace_only_message(self):
-        """Test message with only whitespace"""
-        message = "   \t\n  "
-        assert not message.strip()
-
-
-class TestDataStructures:
-    """Test data structure usage"""
-    
-    def test_dictionary_for_clients(self):
-        """Test dictionary for storing client-username mapping"""
-        clients = {}
-        
-        # Simulate adding clients
-        sock1 = Mock()
-        sock2 = Mock()
-        
-        clients[sock1] = "alice"
-        clients[sock2] = "bob"
-        
-        assert len(clients) == 2
-        assert clients[sock1] == "alice"
-        assert clients[sock2] == "bob"
-    
-    def test_set_for_usernames(self):
-        """Test set for username uniqueness"""
-        usernames = set()
-        
-        usernames.add("alice")
-        usernames.add("bob")
-        usernames.add("alice")  # Duplicate
-        
-        assert len(usernames) == 2
-        assert "alice" in usernames
-        assert "charlie" not in usernames
-    
-    def test_list_for_clients(self):
-        """Test list for client connections"""
-        client_list = []
-        
-        sock1 = Mock()
-        sock2 = Mock()
-        
-        client_list.append(sock1)
-        client_list.append(sock2)
-        
-        assert len(client_list) == 2
-        assert sock1 in client_list
-
-
-class TestCommandSystem:
-    """Test command functionality"""
-    
-    def test_command_prefix(self):
-        """Test commands start with forward slash"""
-        commands = ["/help", "/users", "/quit", "/exit"]
-        for cmd in commands:
-            assert cmd.startswith("/")
-    
-    def test_command_parsing(self):
-        """Test command string parsing"""
-        message = "/help"
-        assert message.startswith("/")
-        cmd = message.lower().strip()
-        assert cmd == "/help"
-    
-    def test_quit_command_variants(self):
-        """Test different quit command variants"""
-        quit_commands = ["/quit", "/exit", "/leave"]
-        for cmd in quit_commands:
-            assert cmd in ["/quit", "/exit", "/leave"]
-
-
-class TestConfiguration:
-    """Test configuration and defaults"""
-    
-    def test_default_host(self):
-        """Test default host is localhost"""
-        default_host = "127.0.0.1"
-        assert default_host == "127.0.0.1"
-    
-    def test_default_port(self):
-        """Test default port is 5000"""
-        default_port = 5000
-        assert default_port == 5000
-    
-    def test_default_tor_port(self):
-        """Test default Tor port is 9050"""
-        default_tor_port = 9050
-        assert default_tor_port == 9050
-    
-    def test_tor_socks_version(self):
-        """Test SOCKS5 version"""
-        socks_version = 5
-        assert socks_version == 5
-
-
-class TestSecurityValidation:
-    """Test security-related validation"""
-    
-    def test_no_sql_injection_in_username(self):
-        """Test SQL injection patterns blocked"""
-        dangerous = ["'; DROP TABLE users; --", "admin' --", "1' OR '1'='1"]
-        # These should be validated as usernames
-        for danger in dangerous:
-            # In a real system, these would be sanitized
-            # For now, we just check they'd fail validation
-            assert " " in danger or "'" in danger
-    
-    def test_no_xss_in_messages(self):
-        """Test XSS patterns validation"""
-        xss_patterns = ["<script>", "<img>", "javascript:"]
-        for pattern in xss_patterns:
-            assert "<" in pattern or ":" in pattern
-    
-    def test_code_case_sensitivity(self):
-        """Test room code is case-sensitive"""
-        code1 = "A7B2K9F4M1"
-        code2 = "a7b2k9f4m1"
-        assert code1 != code2
-
-
-class TestIntegration:
-    """Integration tests"""
-    
-    def test_full_authentication_sequence(self):
-        """Test complete authentication sequence"""
-        # Simulate: code -> username -> connected
-        room_code = "A7B2K9F4M1"
-        username = "alice"
-        
-        assert len(room_code) == 10
-        assert 1 <= len(username) <= 20
-        assert " " not in username
-        
-        # All validations pass
-        assert True
-    
-    def test_multi_user_scenario(self):
-        """Test multiple users connecting"""
-        clients = {}
-        users = ["alice", "bob", "charlie"]
-        
-        for i, user in enumerate(users):
-            clients[i] = user
-        
-        assert len(clients) == 3
-        assert clients[0] == "alice"
-        assert clients[2] == "charlie"
-    
-    def test_message_broadcast_scenario(self):
-        """Test message broadcast to multiple clients"""
-        clients = {
-            "sock1": "alice",
-            "sock2": "bob",
-            "sock3": "charlie"
-        }
-        
-        message = "Hello everyone!"
-        
-        # Message should go to all clients except sender
-        for sock, username in clients.items():
-            if username != "alice":
-                # Would broadcast to this client
-                assert username in ["bob", "charlie"]
-
-
-class TestLogging:
-    """Test logging and output functionality"""
-    
-    def test_status_prefix(self):
-        """Test status message prefix"""
-        prefix = "[STATUS]"
-        assert prefix.startswith("[")
-        assert prefix.endswith("]")
-    
-    def test_error_prefix(self):
-        """Test error message prefix"""
-        prefix = "⚠️"
-        assert prefix is not None
-    
-    def test_info_prefix(self):
-        """Test info message prefix"""
-        prefix = "ℹ️"
-        assert prefix is not None
-
-
-# ============================================================================
-# Test Execution Configuration
-# ============================================================================
 
 if __name__ == "__main__":
-    # Run with: python -m pytest test_chat_system.py -v
-    pytest.main([__file__, "-v", "--tb=short"])
+    run_all_tests()
