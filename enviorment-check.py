@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 """
-Terminal Chat System - Environment Setup & Auto-Installer
-==========================================================
-Checks system, installs dependencies, detects CGNAT,
-sets up ngrok tunnel, and configures everything automatically.
-
-Run this FIRST before starting the server!
+AnonymChat - Environment Setup
+================================
+Installs all dependencies and verifies Tor is working correctly.
+Run this ONCE before starting the chat system.
 """
 
 import os
@@ -15,129 +13,66 @@ import subprocess
 import socket
 import time
 import urllib.request
-import urllib.error
+import json
 from pathlib import Path
 from datetime import datetime
 
 
-class Colors:
-    HEADER    = '\033[95m'
-    BLUE      = '\033[94m'
-    CYAN      = '\033[96m'
-    GREEN     = '\033[92m'
-    YELLOW    = '\033[93m'
-    RED       = '\033[91m'
-    BOLD      = '\033[1m'
-    END       = '\033[0m'
+class C:
+    CYAN   = '\033[96m'
+    GREEN  = '\033[92m'
+    YELLOW = '\033[93m'
+    RED    = '\033[91m'
+    BLUE   = '\033[94m'
+    BOLD   = '\033[1m'
+    END    = '\033[0m'
 
 
 def banner():
-    print(f"\n{Colors.BOLD}{Colors.CYAN}")
+    print(f"\n{C.BOLD}{C.CYAN}")
     print("╔" + "═" * 68 + "╗")
-    print("║" + "  🔐  ANONYMCHAT — ENVIRONMENT SETUP & AUTO-INSTALLER  🔐  ".center(68) + "║")
+    print("║" + "  🔐  AnonymChat — Environment Setup  🔐  ".center(68) + "║")
+    print("║" + "  No accounts. No logs. No traces.  ".center(68) + "║")
     print("╚" + "═" * 68 + "╝")
-    print(f"{Colors.END}")
+    print(C.END)
 
 
 def section(title):
-    print(f"\n{Colors.BOLD}{Colors.BLUE}{'─' * 68}{Colors.END}")
-    print(f"{Colors.BOLD}{Colors.BLUE}  ▶  {title}{Colors.END}")
-    print(f"{Colors.BOLD}{Colors.BLUE}{'─' * 68}{Colors.END}\n")
+    print(f"\n{C.BOLD}{C.BLUE}{'─' * 68}{C.END}")
+    print(f"{C.BOLD}{C.BLUE}  ▶  {title}{C.END}")
+    print(f"{C.BOLD}{C.BLUE}{'─' * 68}{C.END}\n")
 
 
-def ok(msg):    print(f"{Colors.GREEN}  ✅  {msg}{Colors.END}")
-def fail(msg):  print(f"{Colors.RED}  ❌  {msg}{Colors.END}")
-def warn(msg):  print(f"{Colors.YELLOW}  ⚠️   {msg}{Colors.END}")
-def info(msg):  print(f"{Colors.CYAN}  ℹ️   {msg}{Colors.END}")
-def step(msg):  print(f"{Colors.BOLD}  →   {msg}{Colors.END}")
+def ok(msg):   print(f"{C.GREEN}  ✅  {msg}{C.END}")
+def fail(msg): print(f"{C.RED}  ❌  {msg}{C.END}")
+def warn(msg): print(f"{C.YELLOW}  ⚠️   {msg}{C.END}")
+def info(msg): print(f"{C.CYAN}  ℹ️   {msg}{C.END}")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# HELPERS
-# ─────────────────────────────────────────────────────────────────────────────
-
-def run(cmd, timeout=30):
-    """Run a shell command silently, return (success, output)"""
+def run_cmd(cmd, timeout=30):
     try:
-        r = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=timeout
-        )
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         return r.returncode == 0, (r.stdout + r.stderr).strip()
     except Exception as e:
         return False, str(e)
 
 
 def pip_install(package, label=None):
-    """Install a pip package, return True on success"""
     label = label or package
-    print(f"  ⏳  Installing {label}...", end=" ", flush=True)
-    success, out = run([sys.executable, "-m", "pip", "install",
-                        package, "--break-system-packages", "-q"])
-    if not success:
-        # fallback: user mode
-        success, out = run([sys.executable, "-m", "pip", "install",
-                            package, "--user", "-q"])
-    if success:
-        print(f"{Colors.GREEN}done{Colors.END}")
-    else:
-        print(f"{Colors.RED}failed{Colors.END}")
-        info(out[:200] if out else "No details")
-    return success
+    print(f"  ⏳  Installing {label} ...", end=" ", flush=True)
+    ok_flag, _ = run_cmd([sys.executable, "-m", "pip", "install",
+                          package, "--break-system-packages", "-q"])
+    if not ok_flag:
+        ok_flag, _ = run_cmd([sys.executable, "-m", "pip", "install",
+                              package, "--user", "-q"])
+    print(f"{C.GREEN}done{C.END}" if ok_flag else f"{C.RED}failed{C.END}")
+    return ok_flag
 
 
-def fetch_url(url, timeout=6):
-    try:
-        with urllib.request.urlopen(url, timeout=timeout) as r:
-            return r.read().decode().strip()
-    except:
-        return None
-
-
-def get_local_ip():
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-        s.close()
-        return ip
-    except:
-        return "127.0.0.1"
-
-
-def get_public_ip():
-    for url in ["https://api.ipify.org",
-                "https://checkip.amazonaws.com",
-                "https://icanhazip.com"]:
-        ip = fetch_url(url)
-        if ip:
-            return ip
-    return None
-
-
-def is_cgnat(public_ip):
-    """
-    Returns True if the ISP uses CGNAT (Carrier-Grade NAT).
-    CGNAT IPs are in the 100.64.0.0/10 range (RFC 6598).
-    Jio almost always uses CGNAT. Many Airtel connections do too.
-    When CGNAT is active, port forwarding is impossible.
-    """
-    if not public_ip:
-        return True
-    if public_ip.startswith("100."):
-        try:
-            second = int(public_ip.split(".")[1])
-            if 64 <= second <= 127:
-                return True
-        except:
-            pass
-    return False
-
-
-def check_port_open(port, timeout=3):
-    """Check if a local port is already in use"""
+def port_open(port):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(timeout)
+        s.settimeout(2)
         result = s.connect_ex(("127.0.0.1", port))
         s.close()
         return result == 0
@@ -145,391 +80,356 @@ def check_port_open(port, timeout=3):
         return False
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 1 — SYSTEM INFO
+def has_internet():
+    try:
+        socket.create_connection(("8.8.8.8", 53), timeout=3)
+        return True
+    except:
+        return False
+
+
+def get_os():
+    return platform.system().lower()
+
+
+def fetch(url, timeout=8):
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "AnonymChat/1.0"})
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.read().decode().strip()
+    except:
+        return None
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 
 def check_system():
-    section("System Information")
-    print(f"  OS          : {platform.system()} {platform.release()}")
-    print(f"  Platform    : {platform.machine()}")
-    print(f"  Python      : {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")
-    print(f"  Time        : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    section("System Check")
+    py = sys.version_info
+    print(f"  OS       : {platform.system()} {platform.release()}")
+    print(f"  Python   : {py.major}.{py.minor}.{py.micro}")
+    print(f"  Time     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 
-    if sys.version_info < (3, 6):
-        fail("Python 3.6+ is required. Please upgrade Python.")
+    if py < (3, 6):
+        fail("Python 3.6+ required.")
         sys.exit(1)
-    else:
-        ok(f"Python {sys.version_info.major}.{sys.version_info.minor} — OK")
+    ok(f"Python {py.major}.{py.minor} — OK")
 
-    # Check pip
-    success, out = run([sys.executable, "-m", "pip", "--version"])
-    if success:
-        ok("pip is available")
-    else:
-        fail("pip not found — install pip first")
+    good, _ = run_cmd([sys.executable, "-m", "pip", "--version"])
+    if not good:
+        fail("pip not found.")
         sys.exit(1)
+    ok("pip — OK")
+
+    if not has_internet():
+        fail("No internet connection.")
+        sys.exit(1)
+    ok("Internet — connected")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 2 — INTERNET & CGNAT DETECTION
-# ─────────────────────────────────────────────────────────────────────────────
+def install_python_packages():
+    section("Python Packages")
 
-def check_network():
-    section("Network & ISP Detection")
-
-    # Internet connectivity
-    try:
-        socket.create_connection(("8.8.8.8", 53), timeout=3)
-        ok("Internet connection — active")
-        has_internet = True
-    except:
-        warn("No internet connection detected")
-        has_internet = False
-
-    local_ip  = get_local_ip()
-    public_ip = get_public_ip()
-
-    print(f"\n  Local IP   (LAN / WiFi)  : {local_ip}")
-    print(f"  Public IP  (internet)    : {public_ip or 'Could not fetch'}")
-
-    cgnat = is_cgnat(public_ip)
-
-    if cgnat:
-        warn("CGNAT detected — your ISP (likely Jio/Airtel) shares")
-        print(f"        your public IP with many users.")
-        print(f"        ➜  Port forwarding will NOT work on this connection.")
-        print(f"        ➜  ngrok will be set up automatically to bypass this.")
-    else:
-        ok("Direct public IP detected — port forwarding is possible")
-        print(f"\n  To allow friends to connect over internet:")
-        print(f"    1. Open your router at http://192.168.1.1")
-        print(f"    2. Add port forwarding rule:")
-        print(f"       External Port : 5000")
-        print(f"       Internal IP   : {local_ip}")
-        print(f"       Internal Port : 5000")
-        print(f"       Protocol      : TCP")
-        print(f"    3. Share Public IP {public_ip} and Room Code with friend")
-
-    return has_internet, cgnat, local_ip, public_ip
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 3 — INSTALL CORE DEPENDENCIES
-# ─────────────────────────────────────────────────────────────────────────────
-
-def install_core():
-    section("Core Dependencies")
-
-    # pyngrok — needed for CGNAT bypass
-    try:
-        from pyngrok import ngrok
-        ok("pyngrok already installed")
-    except ImportError:
-        warn("pyngrok not installed — installing now...")
-        if pip_install("pyngrok", "pyngrok (ngrok tunnel)"):
-            ok("pyngrok installed successfully")
-        else:
-            fail("Could not install pyngrok — ngrok tunnel will not work")
-
-    # PySocks — needed for Tor mode
-    try:
-        import socks
-        ok("PySocks already installed")
-    except ImportError:
-        warn("PySocks not installed (needed for Tor mode) — installing...")
-        if pip_install("PySocks", "PySocks (Tor proxy)"):
-            ok("PySocks installed successfully")
-        else:
-            warn("PySocks install failed — Tor mode won't work (chat still works)")
-
-    # stem — needed for Tor hidden services
     try:
         from stem.control import Controller
-        ok("stem already installed")
+        ok("stem — already installed")
     except ImportError:
-        warn("stem not installed (needed for Tor hidden services) — installing...")
-        if pip_install("stem", "stem (Tor hidden services)"):
-            ok("stem installed successfully")
+        if pip_install("stem", "stem  (Tor hidden service control)"):
+            ok("stem installed")
         else:
-            warn("stem install failed — Tor hidden services won't work (chat still works)")
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 4 — NGROK SETUP (auto-bypass for CGNAT)
-# ─────────────────────────────────────────────────────────────────────────────
-
-def setup_ngrok(cgnat: bool):
-    section("ngrok Tunnel Setup (Internet Bypass)")
+            warn("stem install failed")
 
     try:
-        from pyngrok import ngrok, conf
+        import socks
+        ok("PySocks — already installed")
     except ImportError:
-        fail("pyngrok is not installed — skipping ngrok setup")
-        return False
-
-    # ── Auth token ────────────────────────────────────────────────────────────
-    # Check if a token is already saved
-    config_path = Path.home() / ".config" / "ngrok" / "ngrok.yml"
-    alt_config   = Path.home() / ".ngrok2" / "ngrok.yml"
-
-    token_saved = config_path.exists() or alt_config.exists()
-
-    if token_saved:
-        ok("ngrok auth token already configured")
-    else:
-        print(f"\n  ngrok requires a free account to create tunnels.")
-        print(f"\n  {'─' * 60}")
-        print(f"  HOW TO GET YOUR FREE ngrok AUTH TOKEN:")
-        print(f"  {'─' * 60}")
-        print(f"  1. Open  https://dashboard.ngrok.com/signup  in your browser")
-        print(f"  2. Sign up for free (Google/GitHub login works)")
-        print(f"  3. After login go to:  https://dashboard.ngrok.com/get-started/your-authtoken")
-        print(f"  4. Copy the token (looks like: 2abc...xyz_...)")
-        print(f"  {'─' * 60}\n")
-
-        try:
-            token = input(f"  Paste your ngrok auth token here (or press Enter to skip): ").strip()
-        except (KeyboardInterrupt, EOFError):
-            token = ""
-
-        if token:
-            success, out = run([sys.executable, "-m", "pyngrok", "authtoken", token])
-            if not success:
-                # Try via pyngrok API directly
-                try:
-                    conf.get_default().auth_token = token
-                    ngrok.set_auth_token(token)
-                    ok("ngrok auth token saved")
-                    token_saved = True
-                except Exception as e:
-                    warn(f"Could not save token automatically: {e}")
-                    info("Run manually:  ngrok authtoken <your_token>")
-            else:
-                ok("ngrok auth token saved successfully")
-                token_saved = True
+        if pip_install("PySocks", "PySocks  (Tor SOCKS5 for client)"):
+            ok("PySocks installed")
         else:
-            warn("Skipped ngrok auth token — tunnels may not work without it")
-            info("You can add it later by running this script again")
+            warn("PySocks install failed")
 
-    # ── Test tunnel ───────────────────────────────────────────────────────────
-    print()
-    if cgnat:
-        info("CGNAT detected — testing ngrok tunnel on port 5000...")
-    else:
-        info("Testing ngrok tunnel (useful even without CGNAT as a backup)...")
 
-    try:
-        from pyngrok import ngrok as ng
-        # Kill any existing tunnels first
+def check_tor_traffic():
+    """
+    Ask the Tor Project's own API if our traffic is going through Tor.
+    Works regardless of HOW Tor is active (daemon, VPN, Orbot, OnionFruit).
+    """
+    print("  ⏳  Checking if traffic routes through Tor ...", end=" ", flush=True)
+    data = fetch("https://check.torproject.org/api/ip", timeout=10)
+    if data:
         try:
-            ng.kill()
-            time.sleep(1)
+            parsed = json.loads(data)
+            is_tor = parsed.get("IsTor", False)
+            exit_ip = parsed.get("IP", "unknown")
+            print(f"{C.GREEN}done{C.END}")
+            return is_tor, exit_ip
         except:
             pass
+    print(f"{C.YELLOW}could not reach check.torproject.org{C.END}")
+    return False, None
 
-        print("  ⏳  Opening test tunnel...", end=" ", flush=True)
-        tunnel = ng.connect(5000, "tcp")
-        url    = tunnel.public_url.replace("tcp://", "")
-        host, port = url.rsplit(":", 1)
-        print(f"{Colors.GREEN}success{Colors.END}\n")
 
-        ok("ngrok tunnel is working!")
-        print(f"\n  {'═' * 60}")
-        print(f"  📌  SHARE THESE WITH YOUR FRIEND:")
-        print(f"  {'═' * 60}")
-        print(f"  Server IP   →  {Colors.BOLD}{host}{Colors.END}")
-        print(f"  Port        →  {Colors.BOLD}{port}{Colors.END}")
-        print(f"  {'═' * 60}")
-        print(f"\n  ⚠️  This test tunnel will close when this script exits.")
-        print(f"      When you start chat-server.py, it will open a new")
-        print(f"      tunnel automatically and show fresh IP + Port.\n")
+def detect_and_setup_tor():
+    section("Tor Detection & Setup")
 
-        # Close the test tunnel
-        ng.disconnect(tunnel.public_url)
-        ng.kill()
+    socks_up   = port_open(9050)
+    control_up = port_open(9051)
+    traffic_tor, exit_ip = check_tor_traffic()
+
+    print()
+
+    # ── Case 1: Everything already perfect ────────────────────────────────
+    if socks_up and control_up and traffic_tor:
+        ok("Tor SOCKS proxy    — port 9050 active")
+        ok("Tor control port   — port 9051 active")
+        ok(f"Traffic via Tor    — exit IP: {exit_ip}")
         return True
 
+    # ── Case 2: Ports open but traffic check failed (no internet via Tor) ─
+    if socks_up and control_up:
+        ok("Tor SOCKS proxy    — port 9050 active")
+        ok("Tor control port   — port 9051 active")
+        warn("Could not verify traffic through Tor (check.torproject.org unreachable)")
+        info("Ports are open — assuming Tor is working. Proceeding...")
+        return True
+
+    # ── Case 3: Tor VPN active (traffic through Tor) but no daemon ports ──
+    if traffic_tor and not socks_up and not control_up:
+        ok(f"Tor VPN detected   — traffic going through Tor (exit IP: {exit_ip})")
+        warn("But Tor daemon ports 9050 and 9051 are NOT open")
+        warn("Tor VPN routes traffic but cannot create .onion addresses")
+        print()
+        print(f"  {C.BOLD}The server needs Tor daemon running alongside Tor VPN.{C.END}")
+        print(f"  Keep Tor VPN / OnionFruit running AND also start Tor Expert Bundle:\n")
+        _print_windows_tor_start() if get_os() == "windows" else _print_linux_tor_start()
+        print()
+        # Try to start Tor daemon anyway
+        return _try_start_tor_daemon()
+
+    # ── Case 4: SOCKS open but no control port ────────────────────────────
+    if socks_up and not control_up:
+        ok("Tor SOCKS proxy    — port 9050 active")
+        fail("Tor control port   — port 9051 NOT open")
+        warn("Control port is required to create .onion addresses")
+        info("Restarting Tor with correct flags...")
+        _kill_tor()
+        return _try_start_tor_daemon()
+
+    # ── Case 5: Nothing running at all ────────────────────────────────────
+    fail("Tor is not running")
+    info("Installing and starting Tor daemon...")
+    installed = _install_tor_binary()
+    if not installed:
+        return False
+    return _try_start_tor_daemon()
+
+
+def _install_tor_binary():
+    good, out = run_cmd(["tor", "--version"], timeout=5)
+    if good:
+        ok(f"Tor binary — {out.split(chr(10))[0]}")
+        return True
+
+    os_name = get_os()
+    print("  ⏳  Installing Tor...", end=" ", flush=True)
+
+    if os_name == "linux":
+        distro = ""
+        try:
+            with open("/etc/os-release") as f:
+                distro = f.read().lower()
+        except:
+            pass
+        if any(x in distro for x in ["ubuntu", "debian", "mint", "pop"]):
+            good, _ = run_cmd(["sudo", "apt-get", "install", "-y", "tor"], timeout=120)
+        elif any(x in distro for x in ["fedora", "rhel", "centos"]):
+            good, _ = run_cmd(["sudo", "dnf", "install", "-y", "tor"], timeout=120)
+        elif any(x in distro for x in ["arch", "manjaro"]):
+            good, _ = run_cmd(["sudo", "pacman", "-S", "tor", "--noconfirm"], timeout=120)
+        print(f"{C.GREEN}done{C.END}" if good else f"{C.RED}failed{C.END}")
+        return good
+
+    elif os_name == "darwin":
+        good, _ = run_cmd(["brew", "install", "tor"], timeout=180)
+        print(f"{C.GREEN}done{C.END}" if good else f"{C.RED}failed{C.END}")
+        return good
+
+    elif os_name == "windows":
+        print(f"{C.YELLOW}manual install needed{C.END}")
+        print()
+        fail("Cannot auto-install Tor on Windows.")
+        _print_windows_tor_start()
+        return False
+
+    print(f"{C.RED}unknown OS{C.END}")
+    return False
+
+
+def _try_start_tor_daemon():
+    print("  ⏳  Starting Tor (SocksPort 9050 + ControlPort 9051)...", end="", flush=True)
+    proc = _launch_tor()
+    if not proc:
+        print(f" {C.RED}failed to launch{C.END}")
+        _print_manual_start_hint()
+        return False
+
+    for _ in range(45):
+        time.sleep(1)
+        print(".", end="", flush=True)
+        if port_open(9050) and port_open(9051):
+            print(f" {C.GREEN}ready{C.END}")
+            ok("Tor SOCKS proxy    — port 9050 active")
+            ok("Tor control port   — port 9051 active")
+            return True
+
+    print(f" {C.YELLOW}timeout{C.END}")
+    fail("Tor did not start in 45 seconds.")
+    _print_manual_start_hint()
+    return False
+
+
+def _launch_tor():
+    try:
+        return subprocess.Popen(
+            ["tor",
+             "--SocksPort", "9050",
+             "--ControlPort", "9051",
+             "--CookieAuthentication", "1",
+             "--Log", "notice stdout"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except Exception:
+        return None
+
+
+def _kill_tor():
+    os_name = get_os()
+    if os_name in ["linux", "darwin"]:
+        run_cmd(["pkill", "-f", "tor"], timeout=5)
+    elif os_name == "windows":
+        run_cmd(["taskkill", "/F", "/IM", "tor.exe"], timeout=5)
+    time.sleep(2)
+
+
+def _print_manual_start_hint():
+    print()
+    print("  Start Tor manually in a NEW terminal window:\n")
+    if get_os() == "windows":
+        _print_windows_tor_start()
+    else:
+        _print_linux_tor_start()
+    print("\n  Then run this script again.\n")
+
+
+def _print_windows_tor_start():
+    print(f"  {C.BOLD}Windows — Tor Expert Bundle:{C.END}")
+    print(f"  1. Download from: https://www.torproject.org/download/tor/")
+    print(f"  2. Extract the zip")
+    print(f"  3. Open PowerShell in the extracted tor\\ folder")
+    print(f"  4. Run:")
+    print(f"     {C.CYAN}.\\tor.exe --SocksPort 9050 --ControlPort 9051 --CookieAuthentication 1{C.END}")
+    print(f"  5. Wait for 'Bootstrapped 100%' then run this script again")
+
+
+def _print_linux_tor_start():
+    print(f"  {C.CYAN}tor --SocksPort 9050 --ControlPort 9051 --CookieAuthentication 1{C.END}")
+
+
+def test_hidden_service():
+    section("Testing .onion Address Creation")
+
+    try:
+        from stem.control import Controller
+    except ImportError:
+        fail("stem not installed.")
+        return False
+
+    if not port_open(9051):
+        fail("Control port 9051 not open — cannot create .onion address.")
+        return False
+
+    print("  ⏳  Connecting to Tor control port ...", end=" ", flush=True)
+    try:
+        with Controller.from_port(port=9051) as ctrl:
+            ctrl.authenticate()
+            print(f"{C.GREEN}connected{C.END}")
+
+            print("  ⏳  Creating test .onion address ...", end=" ", flush=True)
+            # Use create_ephemeral_hidden_service (correct for stem 1.5+)
+            resp  = ctrl.create_ephemeral_hidden_service(
+                {80: 5000}, await_publication=False
+            )
+            onion = resp.service_id
+            print(f"{C.GREEN}done{C.END}\n")
+
+            ok(".onion creation works!")
+            print(f"\n  {C.BOLD}Sample address generated:{C.END}")
+            print(f"  {C.CYAN}{C.BOLD}  {onion}.onion{C.END}\n")
+            info("A fresh .onion is generated every time chat-server.py starts.")
+            info("Share it only with the person you want to chat with.")
+
+            ctrl.remove_ephemeral_hidden_service(onion)
+            return True
+
     except Exception as e:
-        fail(f"ngrok tunnel test failed: {e}")
-
-        if "authentication" in str(e).lower() or "authtoken" in str(e).lower() or "auth" in str(e).lower():
-            warn("Your ngrok auth token is missing or invalid.")
-            print(f"\n  Fix:")
-            print(f"  1. Go to https://dashboard.ngrok.com/get-started/your-authtoken")
-            print(f"  2. Copy your token")
-            print(f"  3. Run:  python3 enviorment-check.py  again and paste it")
-        elif "limit" in str(e).lower():
-            warn("You have reached the ngrok free tier tunnel limit.")
-            info("Close other ngrok sessions or wait a few minutes and try again.")
-        else:
-            info(f"Details: {e}")
-
+        print(f"{C.RED}failed{C.END}")
+        fail(f"Tor control error: {e}")
+        if "Authentication" in str(e):
+            info("Try running this script as administrator / with sudo")
         return False
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 5 — TOR CHECK
-# ─────────────────────────────────────────────────────────────────────────────
+def print_summary(tor_ok, hidden_ok):
+    section("Setup Complete — Quick Start")
 
-def check_tor():
-    section("Tor Setup (Optional — for Anonymous Chat)")
-
-    info("Tor is optional. The chat works fine without it.")
-    info("Use Tor only if you need privacy/anonymity.\n")
-
-    # Tor binary
-    success, out = run(["tor", "--version"], timeout=5)
-    if success:
-        version = out.split("\n")[0]
-        ok(f"Tor binary installed: {version}")
-        tor_running = check_port_open(9050)
-        if tor_running:
-            ok("Tor SOCKS proxy is running on port 9050")
-        else:
-            warn("Tor installed but not running")
-            info("Start it with:  tor --SocksPort 9050")
+    if tor_ok and hidden_ok:
+        print(f"  {C.GREEN}{C.BOLD}✅  Everything ready. Your chat is fully traceless.{C.END}\n")
+        print(f"  {C.BOLD}Step 1{C.END}  Start the server (new terminal):")
+        print(f"           {C.CYAN}python3 chat-server.py{C.END}")
+        print(f"           It prints a .onion address + Room Code.\n")
+        print(f"  {C.BOLD}Step 2{C.END}  Share ONLY these 2 things with your friend:")
+        print(f"           • The .onion address")
+        print(f"           • The Room Code\n")
+        print(f"  {C.BOLD}Step 3{C.END}  Friend connects (needs Orbot / Tor running):")
+        print(f"           {C.CYAN}python3 chat-cilent.py --tor{C.END}\n")
+        print(f"  {C.BOLD}Step 4{C.END}  You join too (second terminal):")
+        print(f"           {C.CYAN}python3 chat-cilent.py --tor{C.END}")
+        print(f"           Enter the same .onion your server printed.\n")
+        print(f"  {C.BOLD}Note:{C.END}  If your friend has Tor VPN active (not SOCKS mode):")
+        print(f"           {C.CYAN}python3 chat-cilent.py{C.END}  ← no --tor flag needed\n")
     else:
-        warn("Tor binary not found")
-        print(f"\n  Install Tor (optional):")
-        print(f"    Linux  :  sudo apt install tor")
-        print(f"    macOS  :  brew install tor")
-        print(f"    Windows:  https://www.torproject.org/download/tor/")
-        print(f"    Android:  Install 'Orbot' from Play Store / F-Droid")
-        print(f"              (NOT Tor Browser — that won't work)\n")
+        print(f"  {C.YELLOW}{C.BOLD}⚠️   Setup incomplete.{C.END}\n")
+        if not tor_ok:
+            print(f"  Tor is not running. Start Tor daemon and run this script again.")
+        elif not hidden_ok:
+            print(f"  Tor is running but .onion creation failed.")
+            print(f"  Make sure Tor is started with --ControlPort 9051 --CookieAuthentication 1")
+        print()
 
-    # PySocks
-    try:
-        import socks
-        ok("PySocks installed — Tor mode supported")
-    except ImportError:
-        warn("PySocks not available — Tor mode (--tor flag) won't work")
+    print(f"  {C.BOLD}Why this is traceless:{C.END}")
+    print(f"  • Real IPs never revealed — yours or your friend's")
+    print(f"  • Encrypted through 3+ Tor relays")
+    print(f"  • .onion address changes every session")
+    print(f"  • Zero accounts, zero signups, zero third-party services")
+    print(f"  • ISP cannot see content or destination\n")
 
-    # stem
-    try:
-        from stem.control import Controller
-        ok("stem installed — Tor hidden services supported")
-    except ImportError:
-        warn("stem not available — Tor hidden services won't work")
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 6 — VERIFY CHAT FILES
-# ─────────────────────────────────────────────────────────────────────────────
-
-def check_chat_files():
-    section("Chat Application Files")
-
-    files = {
-        "chat-server.py"     : "Server  (run this to host)",
-        "chat-cilent.py"     : "Client  (run this to join)",
-        "test-chat.py"       : "Tests   (run to verify)",
-        "enviorment-check.py": "This setup script",
-        "README.md"          : "Documentation",
-    }
-
-    all_found = True
-    for filename, desc in files.items():
-        if Path(filename).exists():
-            ok(f"{filename:25s}  —  {desc}")
-        else:
-            warn(f"{filename:25s}  —  NOT FOUND")
-            all_found = False
-
-    if not all_found:
-        info("Missing files won't break setup but make sure you have the main server/client files.")
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 7 — FINAL SUMMARY & QUICK START
-# ─────────────────────────────────────────────────────────────────────────────
-
-def print_summary(cgnat: bool, ngrok_ok: bool):
-    section("Setup Complete — Quick Start Guide")
-
-    if cgnat and ngrok_ok:
-        print(f"  {Colors.GREEN}{Colors.BOLD}✅  Your system is ready! (ngrok will handle internet access){Colors.END}\n")
-        print(f"  HOW TO START CHATTING WITH YOUR FRIEND:\n")
-        print(f"  {Colors.BOLD}Step 1{Colors.END}  — Start the server (your machine):")
-        print(f"           python3 chat-server.py\n")
-        print(f"           The server will print a ROOM CODE and ngrok IP + Port.")
-        print(f"           Share those 3 things with your friend.\n")
-        print(f"  {Colors.BOLD}Step 2{Colors.END}  — Your friend runs (their machine):")
-        print(f"           python3 chat-cilent.py\n")
-        print(f"           They enter the ngrok IP, Port, Room Code, and username.\n")
-        print(f"  {Colors.BOLD}Step 3{Colors.END}  — You also connect as a client (new terminal):")
-        print(f"           python3 chat-cilent.py")
-        print(f"           Enter 127.0.0.1 as the IP (since you are the server)\n")
-
-    elif not cgnat and ngrok_ok:
-        print(f"  {Colors.GREEN}{Colors.BOLD}✅  Your system is ready! (direct public IP + ngrok available){Colors.END}\n")
-        print(f"  You have a proper public IP — you can use port forwarding OR ngrok.\n")
-        print(f"  Easiest option — just run the server and use ngrok:")
-        print(f"           python3 chat-server.py\n")
-
-    elif cgnat and not ngrok_ok:
-        print(f"  {Colors.YELLOW}{Colors.BOLD}⚠️   Partial setup — ngrok is not working yet{Colors.END}\n")
-        print(f"  Your ISP uses CGNAT so port forwarding won't work.")
-        print(f"  You need to fix the ngrok auth token to connect over internet.\n")
-        print(f"  Fix:")
-        print(f"  1. Go to https://dashboard.ngrok.com/get-started/your-authtoken")
-        print(f"  2. Copy your token")
-        print(f"  3. Run:  python3 enviorment-check.py  again")
-        print(f"\n  Local chat (same WiFi) still works without ngrok:")
-        print(f"           python3 chat-server.py")
-
-    else:
-        print(f"  {Colors.GREEN}{Colors.BOLD}✅  Your system is ready!{Colors.END}\n")
-        print(f"  Run:  python3 chat-server.py")
-
-    print(f"\n  {'─' * 60}")
-    print(f"  Optional Tor mode (for anonymous chat):")
-    print(f"    Server :  python3 chat-server.py --tor")
-    print(f"    Client :  python3 chat-cilent.py --tor")
-    print(f"    (Requires Tor/Orbot running on port 9050 first)")
-    print(f"  {'─' * 60}\n")
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# MAIN
-# ─────────────────────────────────────────────────────────────────────────────
 
 def main():
     banner()
-
-    # Step 1 — System
     check_system()
-
-    # Step 2 — Network
-    has_internet, cgnat, local_ip, public_ip = check_network()
-
-    if not has_internet:
-        warn("No internet — skipping package installs and ngrok setup")
-        warn("Connect to the internet and run this script again")
-        sys.exit(1)
-
-    # Step 3 — Install packages
-    install_core()
-
-    # Step 4 — ngrok
-    ngrok_ok = setup_ngrok(cgnat)
-
-    # Step 5 — Tor (informational only)
-    check_tor()
-
-    # Step 6 — Files
-    check_chat_files()
-
-    # Step 7 — Summary
-    print_summary(cgnat, ngrok_ok)
+    install_python_packages()
+    tor_ok     = detect_and_setup_tor()
+    hidden_ok  = test_hidden_service() if tor_ok else False
+    print_summary(tor_ok, hidden_ok)
 
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(f"\n\n{Colors.YELLOW}  Setup interrupted by user{Colors.END}\n")
+        print(f"\n\n{C.YELLOW}  Setup interrupted.{C.END}\n")
         sys.exit(1)
     except Exception as e:
-        print(f"\n{Colors.RED}  Unexpected error: {e}{Colors.END}\n")
-        sys.exit(1)
+        print(f"\n{C.RED}  Unexpected error: {e}{C.END}\n")
+        raise
