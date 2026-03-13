@@ -98,16 +98,21 @@ class ChatClient:
                 self.socket.send(self.username.encode("utf-8"))
                 response = self.socket.recv(1024).decode("utf-8").strip()
                 if response == "USERNAME_TAKEN":
-                    print("❌ Username already taken. Try a different one.")
+                    print("Username already taken. Try a different one.")
                     self.disconnect()
                     return
-                elif response != "USERNAME_OK":
-                    print(f"❌ {response}")
+                elif not response.startswith("USERNAME_OK"):
+                    print(f"Error: {response}")
                     self.disconnect()
                     return
 
-            users_msg = self.socket.recv(1024).decode("utf-8").strip()
-            users = users_msg.replace("USERS:", "").strip() if users_msg.startswith("USERS:") else "?"
+            # USERNAME_OK and USERS: sometimes arrive merged in one packet
+            # e.g. "USERNAME_OKUSERS:alice, bob" — handle both cases
+            if "USERS:" in response:
+                users = response.split("USERS:", 1)[1].strip()
+            else:
+                users_msg = self.socket.recv(1024).decode("utf-8").strip()
+                users = users_msg.replace("USERS:", "").strip() if users_msg.startswith("USERS:") else "?"
 
             self.socket.settimeout(None)
 
